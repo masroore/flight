@@ -27,28 +27,28 @@ use Throwable;
  *
  * Core methods
  *
- * @method void start() Starts engine
- * @method void stop() Stops framework and outputs current response
- * @method void halt(int $code = 200, string $message = '') Stops processing and returns a given response.
- * @method void route(string $pattern, callable $callback, bool $pass_route = false) Routes a URL to a callback function.
- * @method Router router() Gets router
+ * @method void   start()                                                              Starts engine
+ * @method void   stop()                                                               Stops framework and outputs current response
+ * @method void   halt(int $code = 200, string $message = '')                          Stops processing and returns a given response.
+ * @method void   route(string $pattern, callable $callback, bool $pass_route = false) Routes a URL to a callback function.
+ * @method Router router()                                                             Gets router
  *
  * Views
  * @method void render(string $file, array $data = null, string $key = null) Renders template
- * @method View view() Gets current view
+ * @method View view()                                                       Gets current view
  *
  * Request-response
- * @method Request request() Gets current request
- * @method Response response() Gets current response
- * @method void error(Exception $e) Sends an HTTP 500 response for any errors.
- * @method void notFound() Sends an HTTP 404 response when a URL is not found.
- * @method void redirect(string $url, int $code = 303)  Redirects the current request to another URL.
- * @method void json(mixed $data, int $code = 200, bool $encode = true, string $charset = 'utf-8', int $option = 0) Sends a JSON response.
- * @method void jsonp(mixed $data, string $param = 'jsonp', int $code = 200, bool $encode = true, string $charset = 'utf-8', int $option = 0) Sends a JSONP response.
+ * @method Request  request()                                                                                                                     Gets current request
+ * @method Response response()                                                                                                                    Gets current response
+ * @method void     error(Exception $e)                                                                                                           Sends an HTTP 500 response for any errors.
+ * @method void     notFound()                                                                                                                    Sends an HTTP 404 response when a URL is not found.
+ * @method void     redirect(string $url, int $code = 303)                                                                                        Redirects the current request to another URL.
+ * @method void     json(mixed $data, int $code = 200, bool $encode = true, string $charset = 'utf-8', int $option = 0)                           Sends a JSON response.
+ * @method void     jsonp(mixed $data, string $param = 'jsonp', int $code = 200, bool $encode = true, string $charset = 'utf-8', int $option = 0) Sends a JSONP response.
  *
  * HTTP caching
  * @method void etag($id, string $type = 'strong') Handles ETag HTTP caching.
- * @method void lastModified(int $time) Handles last modified HTTP caching.
+ * @method void lastModified(int $time)            Handles last modified HTTP caching.
  */
 class Engine
 {
@@ -135,7 +135,7 @@ class Engine
         // Register framework methods
         $methods = [
             'start', 'stop', 'route', 'halt', 'error', 'notFound',
-            'render', 'redirect', 'etag', 'lastModified', 'json', 'jsonp',
+            'render', 'redirect', 'etag', 'lastModified', 'json', 'jsonp', 'httpCache',
             'post', 'put', 'patch', 'delete',
         ];
         foreach ($methods as $name) {
@@ -203,7 +203,7 @@ class Engine
      * Maps a callback to a framework method.
      *
      * @param string   $name     Method name
-     * @param callback $callback Callback function
+     * @param callable $callback Callback function
      *
      * @throws Exception If trying to map over a framework method
      */
@@ -239,7 +239,7 @@ class Engine
      * Adds a pre-filter to a method.
      *
      * @param string   $name     Method name
-     * @param callback $callback Callback function
+     * @param callable $callback Callback function
      */
     public function before(string $name, callable $callback): void
     {
@@ -250,7 +250,7 @@ class Engine
      * Adds a post-filter to a method.
      *
      * @param string   $name     Method name
-     * @param callback $callback Callback function
+     * @param callable $callback Callback function
      */
     public function after(string $name, callable $callback): void
     {
@@ -392,7 +392,8 @@ class Engine
      */
     public function _error($e): void
     {
-        $msg = sprintf('<h1>500 Internal Server Error</h1>' .
+        $msg = sprintf(
+            '<h1>500 Internal Server Error</h1>' .
             '<h3>%s (%s)</h3>' .
             '<pre>%s</pre>',
             $e->getMessage(),
@@ -437,7 +438,7 @@ class Engine
      * Routes a URL to a callback function.
      *
      * @param string   $pattern    URL pattern to match
-     * @param callback $callback   Callback function
+     * @param callable $callback   Callback function
      * @param bool     $pass_route Pass the matching route object to the callback
      */
     public function _route(string $pattern, callable $callback, bool $pass_route = false): void
@@ -449,7 +450,7 @@ class Engine
      * Routes a URL to a callback function.
      *
      * @param string   $pattern    URL pattern to match
-     * @param callback $callback   Callback function
+     * @param callable $callback   Callback function
      * @param bool     $pass_route Pass the matching route object to the callback
      */
     public function _post(string $pattern, callable $callback, bool $pass_route = false): void
@@ -461,7 +462,7 @@ class Engine
      * Routes a URL to a callback function.
      *
      * @param string   $pattern    URL pattern to match
-     * @param callback $callback   Callback function
+     * @param callable $callback   Callback function
      * @param bool     $pass_route Pass the matching route object to the callback
      */
     public function _put(string $pattern, callable $callback, bool $pass_route = false): void
@@ -473,7 +474,7 @@ class Engine
      * Routes a URL to a callback function.
      *
      * @param string   $pattern    URL pattern to match
-     * @param callback $callback   Callback function
+     * @param callable $callback   Callback function
      * @param bool     $pass_route Pass the matching route object to the callback
      */
     public function _patch(string $pattern, callable $callback, bool $pass_route = false): void
@@ -485,7 +486,7 @@ class Engine
      * Routes a URL to a callback function.
      *
      * @param string   $pattern    URL pattern to match
-     * @param callback $callback   Callback function
+     * @param callable $callback   Callback function
      * @param bool     $pass_route Pass the matching route object to the callback
      */
     public function _delete(string $pattern, callable $callback, bool $pass_route = false): void
@@ -657,6 +658,32 @@ class Engine
         if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) &&
             strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) === $time) {
             $this->halt(304);
+        }
+    }
+
+    /**
+     * HTTP caching.
+     *
+     * @param int|string $id Unix timestamp or ETag identifier
+     */
+    public function _httpCache($id): void
+    {
+        // Last modified caching
+        if (\is_int($id)) {
+            $this->response()->header('Last-Modified', gmdate('D, d M Y H:i:s \G\M\T', $id));
+
+            if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) &&
+                strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) === $id) {
+                $this->halt(304);
+            }
+        } // Etag caching
+        else {
+            $this->response()->header('ETag', $id);
+
+            if (isset($_SERVER['HTTP_IF_NONE_MATCH']) &&
+                $_SERVER['HTTP_IF_NONE_MATCH'] === $id) {
+                $this->halt(304);
+            }
         }
     }
 }
