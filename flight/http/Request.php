@@ -8,7 +8,7 @@ declare(strict_types=1);
  * @license     MIT, http://flightphp.com/license
  */
 
-namespace flight\net;
+namespace flight\http;
 
 use flight\util\Collection;
 

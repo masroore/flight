@@ -10,9 +10,9 @@ declare(strict_types=1);
 
 use flight\core\Dispatcher;
 use flight\Engine;
-use flight\net\Request;
-use flight\net\Response;
-use flight\net\Router;
+use flight\http\Request;
+use flight\http\Response;
+use flight\http\Router;
 use flight\template\View;
 
 /**
